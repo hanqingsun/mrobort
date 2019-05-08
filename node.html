@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <script src="https://unpkg.com/konva@3.2.4/konva.min.js"></script>
+    <meta charset="utf-8" />
+    <title>Konva Interactive Scatter Plot with 20,000 Nodes Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <script>
+        var width = window.innerWidth;
+        var height = window.innerHeight;
+
+        function addNode(obj, layer) {
+            var node = new Konva.Wedge({
+                x: obj.x,
+                y: obj.y,
+                radius: 10,
+                rotation: -120,
+                angle: 60,
+                fill: obj.color,
+                id: obj.id
+            });
+
+            layer.add(node);
+        }
+        var stage = new Konva.Stage({
+            container: 'container',
+            width: width,
+            height: height
+        });
+
+        var tooltipLayer = new Konva.Layer();
+        var dragLayer = new Konva.Layer();
+        //   var dragLayer = new Konva.Layer({
+        //     scaleX: 1.5,
+        //     scaleY: 0.8,
+        //     rotation: 10
+        //   });
+        var tooltip = new Konva.Label({
+            opacity: 0.75,
+            visible: false,
+            listening: false
+        });
+
+        tooltip.add(
+            new Konva.Tag({
+                fill: 'black',
+                pointerDirection: 'down',
+                pointerWidth: 10,
+                pointerHeight: 10,
+                lineJoin: 'round',
+                shadowColor: 'black',
+                shadowBlur: 10,
+                shadowOffset: 10,
+                shadowOpacity: 0.2
+            })
+        );
+
+        tooltip.add(
+            new Konva.Text({
+                text: '',
+                fontFamily: 'Calibri',
+                fontSize: 18,
+                padding: 5,
+                fill: 'white'
+            })
+        );
+
+        tooltipLayer.add(tooltip);
+
+        // build data
+        var data = [];
+
+
+        var count = 0;
+
+
+
+
+
+        var group = new Konva.Group({
+            x: 50,
+            rotation: 10,
+            scaleX: 2
+        });
+        dragLayer.add(group);
+        stage.on('dblclick', function () {
+            // what is transform of parent element?
+            var transform = group
+                .getParent()
+                .getAbsoluteTransform()
+                .copy();
+            count++
+            // to detect relative position we need to invert transform
+            transform.invert();
+
+            // now we find relative point
+            var pos = stage.getPointerPosition();
+
+            var circlePos = transform.point(pos);
+
+            data.push({
+                x: circlePos.x,
+                y: circlePos.y,
+                id: count,
+                color: 'red'
+
+            });
+            b();
+        });
+
+
+
+
+
+
+
+
+        // for (var n = 0; n < 10; n++) {
+        //     var x = Math.random() * width;
+        //     var y = Math.random() * width;
+        //     data.push({
+        //         x: x,
+        //         y: y,
+        //         id: n,
+        //         color: 'red'
+        //     });
+        // }q
+
+        // render data
+function b(){
+    var nodeCount = 0;
+        var layer = new Konva.Layer();
+        for (var n = 0; n < data.length; n++) {
+            addNode(data[n], layer);
+            nodeCount++;
+            if (nodeCount >= 0) {
+                nodeCount = 0;
+                stage.add(layer);
+                layer = new Konva.Layer();
+            }
+        }
+
+        stage.add(dragLayer);
+        stage.add(tooltipLayer);
+}
+
+        stage.on('mouseover mousemove dragmove', function (evt) {
+            var node = evt.target;
+            if (node) {
+                // update tooltip
+                var mousePos = node.getStage().getPointerPosition();
+                tooltip.position({
+                    x: mousePos.x,
+                    y: mousePos.y - 5
+                });
+                tooltip
+                    .getText()
+                    .text('id: ' + node.id() + ', color: ' + node.fill() + ', coor: ' + node.x() + ' ,' + node.y());
+                // .text('node: ' + node.id() + ', coor: ' + node.fill());
+                tooltip.show();
+                tooltipLayer.batchDraw();
+            }
+        });
+
+        stage.on('mouseout', function (evt) {
+            tooltip.hide();
+            tooltipLayer.draw();
+        });
+
+        var startLayer;
+
+
+
+
+        stage.on('mousedown', function (evt) {
+            var shape = evt.target;
+            if (shape) {
+                startLayer = shape.getLayer();
+                shape.moveTo(dragLayer);
+                startLayer.draw();
+                // manually trigger drag and drop
+                shape.startDrag();
+            }
+        });
+
+        // stage.on('mouseup', function (evt) {
+        //     var shape = evt.target;
+        //     if (shape) {
+        //         shape.moveTo(startLayer);
+        //         startLayer.draw();
+        //         dragLayer.draw();
+                
+        //     }
+         
+        // });
+    </script>
+</body>
+
+</html>
